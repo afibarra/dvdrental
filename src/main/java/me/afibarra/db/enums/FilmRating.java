@@ -52,9 +52,7 @@ public enum FilmRating implements EnumType {
     }
 
     /**
-     * Lookup a value of this EnumType by its literal. Returns
-     * <code>null</code>, if no such value could be found, see {@link
-     * EnumType#lookupLiteral(Class, String)}.
+     * Lookup a value of this EnumType by its literal
      */
     public static FilmRating lookupLiteral(String literal) {
         return EnumType.lookupLiteral(FilmRating.class, literal);

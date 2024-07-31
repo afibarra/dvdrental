@@ -6,31 +6,25 @@ package me.afibarra.db.tables;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import me.afibarra.db.Indexes;
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
-import me.afibarra.db.tables.Address.AddressPath;
-import me.afibarra.db.tables.Country.CountryPath;
 import me.afibarra.db.tables.records.CityRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Function4;
 import org.jooq.Identity;
 import org.jooq.Index;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.SQL;
+import org.jooq.Records;
+import org.jooq.Row4;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -83,11 +77,11 @@ public class City extends TableImpl<CityRecord> {
     public final TableField<CityRecord, LocalDateTime> LAST_UPDATE = createField(DSL.name("last_update"), SQLDataType.LOCALDATETIME(0).nullable(false).defaultValue(DSL.field(DSL.raw("current_timestamp()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private City(Name alias, Table<CityRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private City(Name alias, Table<CityRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private City(Name alias, Table<CityRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -111,37 +105,8 @@ public class City extends TableImpl<CityRecord> {
         this(DSL.name("city"), null);
     }
 
-    public <O extends Record> City(Table<O> path, ForeignKey<O, CityRecord> childPath, InverseForeignKey<O, CityRecord> parentPath) {
-        super(path, childPath, parentPath, CITY);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class CityPath extends City implements Path<CityRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> CityPath(Table<O> path, ForeignKey<O, CityRecord> childPath, InverseForeignKey<O, CityRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private CityPath(Name alias, Table<CityRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public CityPath as(String alias) {
-            return new CityPath(DSL.name(alias), this);
-        }
-
-        @Override
-        public CityPath as(Name alias) {
-            return new CityPath(alias, this);
-        }
-
-        @Override
-        public CityPath as(Table<?> alias) {
-            return new CityPath(alias.getQualifiedName(), this);
-        }
+    public <O extends Record> City(Table<O> child, ForeignKey<O, CityRecord> key) {
+        super(child, key, CITY);
     }
 
     @Override
@@ -169,29 +134,16 @@ public class City extends TableImpl<CityRecord> {
         return Arrays.asList(Keys.FK_CITY_COUNTRY);
     }
 
-    private transient CountryPath _country;
+    private transient Country _country;
 
     /**
      * Get the implicit join path to the <code>sakila.country</code> table.
      */
-    public CountryPath country() {
+    public Country country() {
         if (_country == null)
-            _country = new CountryPath(this, Keys.FK_CITY_COUNTRY, null);
+            _country = new Country(this, Keys.FK_CITY_COUNTRY);
 
         return _country;
-    }
-
-    private transient AddressPath _address;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.address</code>
-     * table
-     */
-    public AddressPath address() {
-        if (_address == null)
-            _address = new AddressPath(this, null, Keys.FK_ADDRESS_CITY.getInverseKey());
-
-        return _address;
     }
 
     @Override
@@ -233,87 +185,27 @@ public class City extends TableImpl<CityRecord> {
         return new City(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row4 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public City where(Condition condition) {
-        return new City(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row4<UShort, String, UShort, LocalDateTime> fieldsRow() {
+        return (Row4) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public City where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function4<? super UShort, ? super String, ? super UShort, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public City where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public City where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public City where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public City where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public City where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public City where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public City whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public City whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function4<? super UShort, ? super String, ? super UShort, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

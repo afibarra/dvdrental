@@ -5,28 +5,22 @@ package me.afibarra.db.tables;
 
 
 import java.time.LocalDateTime;
-import java.util.Collection;
+import java.util.function.Function;
 
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
-import me.afibarra.db.tables.Film.FilmPath;
-import me.afibarra.db.tables.FilmCategory.FilmCategoryPath;
 import me.afibarra.db.tables.records.CategoryRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Function3;
 import org.jooq.Identity;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.SQL;
+import org.jooq.Records;
+import org.jooq.Row3;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -74,11 +68,11 @@ public class Category extends TableImpl<CategoryRecord> {
     public final TableField<CategoryRecord, LocalDateTime> LAST_UPDATE = createField(DSL.name("last_update"), SQLDataType.LOCALDATETIME(0).nullable(false).defaultValue(DSL.field(DSL.raw("current_timestamp()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private Category(Name alias, Table<CategoryRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Category(Name alias, Table<CategoryRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Category(Name alias, Table<CategoryRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -102,37 +96,8 @@ public class Category extends TableImpl<CategoryRecord> {
         this(DSL.name("category"), null);
     }
 
-    public <O extends Record> Category(Table<O> path, ForeignKey<O, CategoryRecord> childPath, InverseForeignKey<O, CategoryRecord> parentPath) {
-        super(path, childPath, parentPath, CATEGORY);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class CategoryPath extends Category implements Path<CategoryRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> CategoryPath(Table<O> path, ForeignKey<O, CategoryRecord> childPath, InverseForeignKey<O, CategoryRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private CategoryPath(Name alias, Table<CategoryRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public CategoryPath as(String alias) {
-            return new CategoryPath(DSL.name(alias), this);
-        }
-
-        @Override
-        public CategoryPath as(Name alias) {
-            return new CategoryPath(alias, this);
-        }
-
-        @Override
-        public CategoryPath as(Table<?> alias) {
-            return new CategoryPath(alias.getQualifiedName(), this);
-        }
+    public <O extends Record> Category(Table<O> child, ForeignKey<O, CategoryRecord> key) {
+        super(child, key, CATEGORY);
     }
 
     @Override
@@ -148,27 +113,6 @@ public class Category extends TableImpl<CategoryRecord> {
     @Override
     public UniqueKey<CategoryRecord> getPrimaryKey() {
         return Keys.KEY_CATEGORY_PRIMARY;
-    }
-
-    private transient FilmCategoryPath _filmCategory;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>sakila.film_category</code> table
-     */
-    public FilmCategoryPath filmCategory() {
-        if (_filmCategory == null)
-            _filmCategory = new FilmCategoryPath(this, null, Keys.FK_FILM_CATEGORY_CATEGORY.getInverseKey());
-
-        return _filmCategory;
-    }
-
-    /**
-     * Get the implicit many-to-many join path to the <code>sakila.film</code>
-     * table
-     */
-    public FilmPath film() {
-        return filmCategory().film();
     }
 
     @Override
@@ -210,87 +154,27 @@ public class Category extends TableImpl<CategoryRecord> {
         return new Category(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row3 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public Category where(Condition condition) {
-        return new Category(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row3<UByte, String, LocalDateTime> fieldsRow() {
+        return (Row3) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public Category where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function3<? super UByte, ? super String, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public Category where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Category where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Category where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Category where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Category where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Category where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Category whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Category whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super UByte, ? super String, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

@@ -6,33 +6,25 @@ package me.afibarra.db.tables;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import me.afibarra.db.Indexes;
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
-import me.afibarra.db.tables.Customer.CustomerPath;
-import me.afibarra.db.tables.Inventory.InventoryPath;
-import me.afibarra.db.tables.Payment.PaymentPath;
-import me.afibarra.db.tables.Staff.StaffPath;
 import me.afibarra.db.tables.records.RentalRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Function7;
 import org.jooq.Identity;
 import org.jooq.Index;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.SQL;
+import org.jooq.Records;
+import org.jooq.Row7;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -102,11 +94,11 @@ public class Rental extends TableImpl<RentalRecord> {
     public final TableField<RentalRecord, LocalDateTime> LAST_UPDATE = createField(DSL.name("last_update"), SQLDataType.LOCALDATETIME(0).nullable(false).defaultValue(DSL.field(DSL.raw("current_timestamp()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private Rental(Name alias, Table<RentalRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Rental(Name alias, Table<RentalRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Rental(Name alias, Table<RentalRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -130,37 +122,8 @@ public class Rental extends TableImpl<RentalRecord> {
         this(DSL.name("rental"), null);
     }
 
-    public <O extends Record> Rental(Table<O> path, ForeignKey<O, RentalRecord> childPath, InverseForeignKey<O, RentalRecord> parentPath) {
-        super(path, childPath, parentPath, RENTAL);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class RentalPath extends Rental implements Path<RentalRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> RentalPath(Table<O> path, ForeignKey<O, RentalRecord> childPath, InverseForeignKey<O, RentalRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private RentalPath(Name alias, Table<RentalRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public RentalPath as(String alias) {
-            return new RentalPath(DSL.name(alias), this);
-        }
-
-        @Override
-        public RentalPath as(Name alias) {
-            return new RentalPath(alias, this);
-        }
-
-        @Override
-        public RentalPath as(Table<?> alias) {
-            return new RentalPath(alias.getQualifiedName(), this);
-        }
+    public <O extends Record> Rental(Table<O> child, ForeignKey<O, RentalRecord> key) {
+        super(child, key, RENTAL);
     }
 
     @Override
@@ -193,53 +156,38 @@ public class Rental extends TableImpl<RentalRecord> {
         return Arrays.asList(Keys.FK_RENTAL_INVENTORY, Keys.FK_RENTAL_CUSTOMER, Keys.FK_RENTAL_STAFF);
     }
 
-    private transient InventoryPath _inventory;
+    private transient Inventory _inventory;
+    private transient Customer _customer;
+    private transient Staff _staff;
 
     /**
      * Get the implicit join path to the <code>sakila.inventory</code> table.
      */
-    public InventoryPath inventory() {
+    public Inventory inventory() {
         if (_inventory == null)
-            _inventory = new InventoryPath(this, Keys.FK_RENTAL_INVENTORY, null);
+            _inventory = new Inventory(this, Keys.FK_RENTAL_INVENTORY);
 
         return _inventory;
     }
 
-    private transient CustomerPath _customer;
-
     /**
      * Get the implicit join path to the <code>sakila.customer</code> table.
      */
-    public CustomerPath customer() {
+    public Customer customer() {
         if (_customer == null)
-            _customer = new CustomerPath(this, Keys.FK_RENTAL_CUSTOMER, null);
+            _customer = new Customer(this, Keys.FK_RENTAL_CUSTOMER);
 
         return _customer;
     }
 
-    private transient StaffPath _staff;
-
     /**
      * Get the implicit join path to the <code>sakila.staff</code> table.
      */
-    public StaffPath staff() {
+    public Staff staff() {
         if (_staff == null)
-            _staff = new StaffPath(this, Keys.FK_RENTAL_STAFF, null);
+            _staff = new Staff(this, Keys.FK_RENTAL_STAFF);
 
         return _staff;
-    }
-
-    private transient PaymentPath _payment;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.payment</code>
-     * table
-     */
-    public PaymentPath payment() {
-        if (_payment == null)
-            _payment = new PaymentPath(this, null, Keys.FK_PAYMENT_RENTAL.getInverseKey());
-
-        return _payment;
     }
 
     @Override
@@ -281,87 +229,27 @@ public class Rental extends TableImpl<RentalRecord> {
         return new Rental(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row7 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public Rental where(Condition condition) {
-        return new Rental(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row7<Integer, LocalDateTime, UInteger, UShort, LocalDateTime, UByte, LocalDateTime> fieldsRow() {
+        return (Row7) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public Rental where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function7<? super Integer, ? super LocalDateTime, ? super UInteger, ? super UShort, ? super LocalDateTime, ? super UByte, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public Rental where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Rental where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Rental where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Rental where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Rental where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Rental where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Rental whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Rental whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function7<? super Integer, ? super LocalDateTime, ? super UInteger, ? super UShort, ? super LocalDateTime, ? super UByte, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

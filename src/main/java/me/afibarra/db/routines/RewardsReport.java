@@ -19,7 +19,7 @@ import org.jooq.types.UByte;
  * Provides a customizable report on best customers
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class RewardsReport extends AbstractRoutine<java.lang.Void> {
+public class RewardsReport extends AbstractRoutine<Void> {
 
     private static final long serialVersionUID = 1L;
 

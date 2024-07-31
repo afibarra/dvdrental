@@ -5,24 +5,24 @@ package me.afibarra.db.tables;
 
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import me.afibarra.db.Indexes;
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
 import me.afibarra.db.tables.records.FilmTextRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
+import org.jooq.Function3;
 import org.jooq.Index;
 import org.jooq.Name;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.SQL;
+import org.jooq.Record;
+import org.jooq.Records;
+import org.jooq.Row3;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -70,11 +70,11 @@ public class FilmText extends TableImpl<FilmTextRecord> {
     public final TableField<FilmTextRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB.defaultValue(DSL.field(DSL.raw("NULL"), SQLDataType.CLOB)), this, "");
 
     private FilmText(Name alias, Table<FilmTextRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private FilmText(Name alias, Table<FilmTextRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private FilmText(Name alias, Table<FilmTextRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -96,6 +96,10 @@ public class FilmText extends TableImpl<FilmTextRecord> {
      */
     public FilmText() {
         this(DSL.name("film_text"), null);
+    }
+
+    public <O extends Record> FilmText(Table<O> child, ForeignKey<O, FilmTextRecord> key) {
+        super(child, key, FILM_TEXT);
     }
 
     @Override
@@ -152,87 +156,27 @@ public class FilmText extends TableImpl<FilmTextRecord> {
         return new FilmText(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row3 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public FilmText where(Condition condition) {
-        return new FilmText(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row3<UShort, String, String> fieldsRow() {
+        return (Row3) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public FilmText where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function3<? super UShort, ? super String, ? super String, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public FilmText where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public FilmText where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public FilmText where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public FilmText where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public FilmText where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public FilmText where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public FilmText whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public FilmText whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super UShort, ? super String, ? super String, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

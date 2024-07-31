@@ -6,30 +6,24 @@ package me.afibarra.db.tables;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import me.afibarra.db.Indexes;
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
-import me.afibarra.db.tables.Actor.ActorPath;
-import me.afibarra.db.tables.Film.FilmPath;
 import me.afibarra.db.tables.records.FilmActorRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Function3;
 import org.jooq.Index;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.SQL;
+import org.jooq.Records;
+import org.jooq.Row3;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -77,11 +71,11 @@ public class FilmActor extends TableImpl<FilmActorRecord> {
     public final TableField<FilmActorRecord, LocalDateTime> LAST_UPDATE = createField(DSL.name("last_update"), SQLDataType.LOCALDATETIME(0).nullable(false).defaultValue(DSL.field(DSL.raw("current_timestamp()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private FilmActor(Name alias, Table<FilmActorRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private FilmActor(Name alias, Table<FilmActorRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private FilmActor(Name alias, Table<FilmActorRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -105,37 +99,8 @@ public class FilmActor extends TableImpl<FilmActorRecord> {
         this(DSL.name("film_actor"), null);
     }
 
-    public <O extends Record> FilmActor(Table<O> path, ForeignKey<O, FilmActorRecord> childPath, InverseForeignKey<O, FilmActorRecord> parentPath) {
-        super(path, childPath, parentPath, FILM_ACTOR);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class FilmActorPath extends FilmActor implements Path<FilmActorRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> FilmActorPath(Table<O> path, ForeignKey<O, FilmActorRecord> childPath, InverseForeignKey<O, FilmActorRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private FilmActorPath(Name alias, Table<FilmActorRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public FilmActorPath as(String alias) {
-            return new FilmActorPath(DSL.name(alias), this);
-        }
-
-        @Override
-        public FilmActorPath as(Name alias) {
-            return new FilmActorPath(alias, this);
-        }
-
-        @Override
-        public FilmActorPath as(Table<?> alias) {
-            return new FilmActorPath(alias.getQualifiedName(), this);
-        }
+    public <O extends Record> FilmActor(Table<O> child, ForeignKey<O, FilmActorRecord> key) {
+        super(child, key, FILM_ACTOR);
     }
 
     @Override
@@ -158,26 +123,25 @@ public class FilmActor extends TableImpl<FilmActorRecord> {
         return Arrays.asList(Keys.FK_FILM_ACTOR_ACTOR, Keys.FK_FILM_ACTOR_FILM);
     }
 
-    private transient ActorPath _actor;
+    private transient Actor _actor;
+    private transient Film _film;
 
     /**
      * Get the implicit join path to the <code>sakila.actor</code> table.
      */
-    public ActorPath actor() {
+    public Actor actor() {
         if (_actor == null)
-            _actor = new ActorPath(this, Keys.FK_FILM_ACTOR_ACTOR, null);
+            _actor = new Actor(this, Keys.FK_FILM_ACTOR_ACTOR);
 
         return _actor;
     }
 
-    private transient FilmPath _film;
-
     /**
      * Get the implicit join path to the <code>sakila.film</code> table.
      */
-    public FilmPath film() {
+    public Film film() {
         if (_film == null)
-            _film = new FilmPath(this, Keys.FK_FILM_ACTOR_FILM, null);
+            _film = new Film(this, Keys.FK_FILM_ACTOR_FILM);
 
         return _film;
     }
@@ -221,87 +185,27 @@ public class FilmActor extends TableImpl<FilmActorRecord> {
         return new FilmActor(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row3 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public FilmActor where(Condition condition) {
-        return new FilmActor(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row3<UShort, UShort, LocalDateTime> fieldsRow() {
+        return (Row3) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public FilmActor where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function3<? super UShort, ? super UShort, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public FilmActor where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public FilmActor where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public FilmActor where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public FilmActor where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public FilmActor where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public FilmActor where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public FilmActor whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public FilmActor whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super UShort, ? super UShort, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

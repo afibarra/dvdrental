@@ -6,33 +6,25 @@ package me.afibarra.db.tables;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import me.afibarra.db.Indexes;
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
-import me.afibarra.db.tables.City.CityPath;
-import me.afibarra.db.tables.Customer.CustomerPath;
-import me.afibarra.db.tables.Staff.StaffPath;
-import me.afibarra.db.tables.Store.StorePath;
 import me.afibarra.db.tables.records.AddressRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Function8;
 import org.jooq.Identity;
 import org.jooq.Index;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.SQL;
+import org.jooq.Records;
+import org.jooq.Row8;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -105,11 +97,11 @@ public class Address extends TableImpl<AddressRecord> {
     public final TableField<AddressRecord, LocalDateTime> LAST_UPDATE = createField(DSL.name("last_update"), SQLDataType.LOCALDATETIME(0).nullable(false).defaultValue(DSL.field(DSL.raw("current_timestamp()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private Address(Name alias, Table<AddressRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Address(Name alias, Table<AddressRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Address(Name alias, Table<AddressRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -133,37 +125,8 @@ public class Address extends TableImpl<AddressRecord> {
         this(DSL.name("address"), null);
     }
 
-    public <O extends Record> Address(Table<O> path, ForeignKey<O, AddressRecord> childPath, InverseForeignKey<O, AddressRecord> parentPath) {
-        super(path, childPath, parentPath, ADDRESS);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class AddressPath extends Address implements Path<AddressRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> AddressPath(Table<O> path, ForeignKey<O, AddressRecord> childPath, InverseForeignKey<O, AddressRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private AddressPath(Name alias, Table<AddressRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public AddressPath as(String alias) {
-            return new AddressPath(DSL.name(alias), this);
-        }
-
-        @Override
-        public AddressPath as(Name alias) {
-            return new AddressPath(alias, this);
-        }
-
-        @Override
-        public AddressPath as(Table<?> alias) {
-            return new AddressPath(alias.getQualifiedName(), this);
-        }
+    public <O extends Record> Address(Table<O> child, ForeignKey<O, AddressRecord> key) {
+        super(child, key, ADDRESS);
     }
 
     @Override
@@ -191,53 +154,16 @@ public class Address extends TableImpl<AddressRecord> {
         return Arrays.asList(Keys.FK_ADDRESS_CITY);
     }
 
-    private transient CityPath _city;
+    private transient City _city;
 
     /**
      * Get the implicit join path to the <code>sakila.city</code> table.
      */
-    public CityPath city() {
+    public City city() {
         if (_city == null)
-            _city = new CityPath(this, Keys.FK_ADDRESS_CITY, null);
+            _city = new City(this, Keys.FK_ADDRESS_CITY);
 
         return _city;
-    }
-
-    private transient CustomerPath _customer;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.customer</code>
-     * table
-     */
-    public CustomerPath customer() {
-        if (_customer == null)
-            _customer = new CustomerPath(this, null, Keys.FK_CUSTOMER_ADDRESS.getInverseKey());
-
-        return _customer;
-    }
-
-    private transient StaffPath _staff;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.staff</code> table
-     */
-    public StaffPath staff() {
-        if (_staff == null)
-            _staff = new StaffPath(this, null, Keys.FK_STAFF_ADDRESS.getInverseKey());
-
-        return _staff;
-    }
-
-    private transient StorePath _store;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.store</code> table
-     */
-    public StorePath store() {
-        if (_store == null)
-            _store = new StorePath(this, null, Keys.FK_STORE_ADDRESS.getInverseKey());
-
-        return _store;
     }
 
     @Override
@@ -279,87 +205,27 @@ public class Address extends TableImpl<AddressRecord> {
         return new Address(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row8 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public Address where(Condition condition) {
-        return new Address(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row8<UShort, String, String, String, UShort, String, String, LocalDateTime> fieldsRow() {
+        return (Row8) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public Address where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function8<? super UShort, ? super String, ? super String, ? super String, ? super UShort, ? super String, ? super String, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public Address where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Address where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Address where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Address where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Address where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Address where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Address whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Address whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function8<? super UShort, ? super String, ? super String, ? super String, ? super UShort, ? super String, ? super String, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

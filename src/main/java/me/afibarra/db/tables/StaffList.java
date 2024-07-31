@@ -4,20 +4,20 @@
 package me.afibarra.db.tables;
 
 
-import java.util.Collection;
+import java.util.function.Function;
 
 import me.afibarra.db.Sakila;
 import me.afibarra.db.tables.records.StaffListRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
+import org.jooq.Function8;
 import org.jooq.Name;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.SQL;
+import org.jooq.Record;
+import org.jooq.Records;
+import org.jooq.Row8;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -89,11 +89,11 @@ public class StaffList extends TableImpl<StaffListRecord> {
     public final TableField<StaffListRecord, UByte> SID = createField(DSL.name("SID"), SQLDataType.TINYINTUNSIGNED.nullable(false), this, "");
 
     private StaffList(Name alias, Table<StaffListRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private StaffList(Name alias, Table<StaffListRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment("VIEW"), TableOptions.view("create view `staff_list` as select `s`.`staff_id` AS `ID`,concat(`s`.`first_name`,' ',`s`.`last_name`) AS `name`,`a`.`address` AS `address`,`a`.`postal_code` AS `zip code`,`a`.`phone` AS `phone`,`sakila`.`city`.`city` AS `city`,`sakila`.`country`.`country` AS `country`,`s`.`store_id` AS `SID` from (((`sakila`.`staff` `s` join `sakila`.`address` `a` on(`s`.`address_id` = `a`.`address_id`)) join `sakila`.`city` on(`a`.`city_id` = `sakila`.`city`.`city_id`)) join `sakila`.`country` on(`sakila`.`city`.`country_id` = `sakila`.`country`.`country_id`))"), where);
+    private StaffList(Name alias, Table<StaffListRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment("VIEW"), TableOptions.view("create view `staff_list` as select `s`.`staff_id` AS `ID`,concat(`s`.`first_name`,' ',`s`.`last_name`) AS `name`,`a`.`address` AS `address`,`a`.`postal_code` AS `zip code`,`a`.`phone` AS `phone`,`sakila`.`city`.`city` AS `city`,`sakila`.`country`.`country` AS `country`,`s`.`store_id` AS `SID` from (((`sakila`.`staff` `s` join `sakila`.`address` `a` on(`s`.`address_id` = `a`.`address_id`)) join `sakila`.`city` on(`a`.`city_id` = `sakila`.`city`.`city_id`)) join `sakila`.`country` on(`sakila`.`city`.`country_id` = `sakila`.`country`.`country_id`))"));
     }
 
     /**
@@ -115,6 +115,10 @@ public class StaffList extends TableImpl<StaffListRecord> {
      */
     public StaffList() {
         this(DSL.name("staff_list"), null);
+    }
+
+    public <O extends Record> StaffList(Table<O> child, ForeignKey<O, StaffListRecord> key) {
+        super(child, key, STAFF_LIST);
     }
 
     @Override
@@ -161,87 +165,27 @@ public class StaffList extends TableImpl<StaffListRecord> {
         return new StaffList(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row8 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public StaffList where(Condition condition) {
-        return new StaffList(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row8<UByte, String, String, String, String, String, String, UByte> fieldsRow() {
+        return (Row8) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public StaffList where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function8<? super UByte, ? super String, ? super String, ? super String, ? super String, ? super String, ? super String, ? super UByte, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public StaffList where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public StaffList where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public StaffList where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public StaffList where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public StaffList where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public StaffList where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public StaffList whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public StaffList whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function8<? super UByte, ? super String, ? super String, ? super String, ? super String, ? super String, ? super String, ? super UByte, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

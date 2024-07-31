@@ -7,32 +7,25 @@ package me.afibarra.db.tables;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import me.afibarra.db.Indexes;
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
-import me.afibarra.db.tables.Customer.CustomerPath;
-import me.afibarra.db.tables.Rental.RentalPath;
-import me.afibarra.db.tables.Staff.StaffPath;
 import me.afibarra.db.tables.records.PaymentRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Function7;
 import org.jooq.Identity;
 import org.jooq.Index;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.SQL;
+import org.jooq.Records;
+import org.jooq.Row7;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -101,11 +94,11 @@ public class Payment extends TableImpl<PaymentRecord> {
     public final TableField<PaymentRecord, LocalDateTime> LAST_UPDATE = createField(DSL.name("last_update"), SQLDataType.LOCALDATETIME(0).defaultValue(DSL.field(DSL.raw("current_timestamp()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private Payment(Name alias, Table<PaymentRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Payment(Name alias, Table<PaymentRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Payment(Name alias, Table<PaymentRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -129,37 +122,8 @@ public class Payment extends TableImpl<PaymentRecord> {
         this(DSL.name("payment"), null);
     }
 
-    public <O extends Record> Payment(Table<O> path, ForeignKey<O, PaymentRecord> childPath, InverseForeignKey<O, PaymentRecord> parentPath) {
-        super(path, childPath, parentPath, PAYMENT);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class PaymentPath extends Payment implements Path<PaymentRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> PaymentPath(Table<O> path, ForeignKey<O, PaymentRecord> childPath, InverseForeignKey<O, PaymentRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private PaymentPath(Name alias, Table<PaymentRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public PaymentPath as(String alias) {
-            return new PaymentPath(DSL.name(alias), this);
-        }
-
-        @Override
-        public PaymentPath as(Name alias) {
-            return new PaymentPath(alias, this);
-        }
-
-        @Override
-        public PaymentPath as(Table<?> alias) {
-            return new PaymentPath(alias.getQualifiedName(), this);
-        }
+    public <O extends Record> Payment(Table<O> child, ForeignKey<O, PaymentRecord> key) {
+        super(child, key, PAYMENT);
     }
 
     @Override
@@ -187,38 +151,36 @@ public class Payment extends TableImpl<PaymentRecord> {
         return Arrays.asList(Keys.FK_PAYMENT_CUSTOMER, Keys.FK_PAYMENT_STAFF, Keys.FK_PAYMENT_RENTAL);
     }
 
-    private transient CustomerPath _customer;
+    private transient Customer _customer;
+    private transient Staff _staff;
+    private transient Rental _rental;
 
     /**
      * Get the implicit join path to the <code>sakila.customer</code> table.
      */
-    public CustomerPath customer() {
+    public Customer customer() {
         if (_customer == null)
-            _customer = new CustomerPath(this, Keys.FK_PAYMENT_CUSTOMER, null);
+            _customer = new Customer(this, Keys.FK_PAYMENT_CUSTOMER);
 
         return _customer;
     }
 
-    private transient StaffPath _staff;
-
     /**
      * Get the implicit join path to the <code>sakila.staff</code> table.
      */
-    public StaffPath staff() {
+    public Staff staff() {
         if (_staff == null)
-            _staff = new StaffPath(this, Keys.FK_PAYMENT_STAFF, null);
+            _staff = new Staff(this, Keys.FK_PAYMENT_STAFF);
 
         return _staff;
     }
 
-    private transient RentalPath _rental;
-
     /**
      * Get the implicit join path to the <code>sakila.rental</code> table.
      */
-    public RentalPath rental() {
+    public Rental rental() {
         if (_rental == null)
-            _rental = new RentalPath(this, Keys.FK_PAYMENT_RENTAL, null);
+            _rental = new Rental(this, Keys.FK_PAYMENT_RENTAL);
 
         return _rental;
     }
@@ -262,87 +224,27 @@ public class Payment extends TableImpl<PaymentRecord> {
         return new Payment(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row7 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public Payment where(Condition condition) {
-        return new Payment(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row7<UShort, UShort, UByte, Integer, BigDecimal, LocalDateTime, LocalDateTime> fieldsRow() {
+        return (Row7) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public Payment where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function7<? super UShort, ? super UShort, ? super UByte, ? super Integer, ? super BigDecimal, ? super LocalDateTime, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public Payment where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Payment where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Payment where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Payment where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Payment where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Payment where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Payment whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Payment whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function7<? super UShort, ? super UShort, ? super UByte, ? super Integer, ? super BigDecimal, ? super LocalDateTime, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

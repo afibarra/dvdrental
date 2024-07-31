@@ -6,33 +6,25 @@ package me.afibarra.db.tables;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import me.afibarra.db.Indexes;
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
-import me.afibarra.db.tables.Address.AddressPath;
-import me.afibarra.db.tables.Customer.CustomerPath;
-import me.afibarra.db.tables.Inventory.InventoryPath;
-import me.afibarra.db.tables.Staff.StaffPath;
 import me.afibarra.db.tables.records.StoreRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Function4;
 import org.jooq.Identity;
 import org.jooq.Index;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.SQL;
+import org.jooq.Records;
+import org.jooq.Row4;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -86,11 +78,11 @@ public class Store extends TableImpl<StoreRecord> {
     public final TableField<StoreRecord, LocalDateTime> LAST_UPDATE = createField(DSL.name("last_update"), SQLDataType.LOCALDATETIME(0).nullable(false).defaultValue(DSL.field(DSL.raw("current_timestamp()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private Store(Name alias, Table<StoreRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Store(Name alias, Table<StoreRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Store(Name alias, Table<StoreRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -114,37 +106,8 @@ public class Store extends TableImpl<StoreRecord> {
         this(DSL.name("store"), null);
     }
 
-    public <O extends Record> Store(Table<O> path, ForeignKey<O, StoreRecord> childPath, InverseForeignKey<O, StoreRecord> parentPath) {
-        super(path, childPath, parentPath, STORE);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class StorePath extends Store implements Path<StoreRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> StorePath(Table<O> path, ForeignKey<O, StoreRecord> childPath, InverseForeignKey<O, StoreRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private StorePath(Name alias, Table<StoreRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public StorePath as(String alias) {
-            return new StorePath(DSL.name(alias), this);
-        }
-
-        @Override
-        public StorePath as(Name alias) {
-            return new StorePath(alias, this);
-        }
-
-        @Override
-        public StorePath as(Table<?> alias) {
-            return new StorePath(alias.getQualifiedName(), this);
-        }
+    public <O extends Record> Store(Table<O> child, ForeignKey<O, StoreRecord> key) {
+        super(child, key, STORE);
     }
 
     @Override
@@ -177,54 +140,27 @@ public class Store extends TableImpl<StoreRecord> {
         return Arrays.asList(Keys.FK_STORE_STAFF, Keys.FK_STORE_ADDRESS);
     }
 
-    private transient StaffPath _staff;
+    private transient Staff _staff;
+    private transient Address _address;
 
     /**
      * Get the implicit join path to the <code>sakila.staff</code> table.
      */
-    public StaffPath staff() {
+    public Staff staff() {
         if (_staff == null)
-            _staff = new StaffPath(this, Keys.FK_STORE_STAFF, null);
+            _staff = new Staff(this, Keys.FK_STORE_STAFF);
 
         return _staff;
     }
 
-    private transient AddressPath _address;
-
     /**
      * Get the implicit join path to the <code>sakila.address</code> table.
      */
-    public AddressPath address() {
+    public Address address() {
         if (_address == null)
-            _address = new AddressPath(this, Keys.FK_STORE_ADDRESS, null);
+            _address = new Address(this, Keys.FK_STORE_ADDRESS);
 
         return _address;
-    }
-
-    private transient CustomerPath _customer;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.customer</code>
-     * table
-     */
-    public CustomerPath customer() {
-        if (_customer == null)
-            _customer = new CustomerPath(this, null, Keys.FK_CUSTOMER_STORE.getInverseKey());
-
-        return _customer;
-    }
-
-    private transient InventoryPath _inventory;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.inventory</code>
-     * table
-     */
-    public InventoryPath inventory() {
-        if (_inventory == null)
-            _inventory = new InventoryPath(this, null, Keys.FK_INVENTORY_STORE.getInverseKey());
-
-        return _inventory;
     }
 
     @Override
@@ -266,87 +202,27 @@ public class Store extends TableImpl<StoreRecord> {
         return new Store(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row4 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public Store where(Condition condition) {
-        return new Store(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row4<UByte, UByte, UShort, LocalDateTime> fieldsRow() {
+        return (Row4) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public Store where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function4<? super UByte, ? super UByte, ? super UShort, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public Store where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Store where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Store where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Store where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Store where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Store where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Store whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Store whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function4<? super UByte, ? super UByte, ? super UShort, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

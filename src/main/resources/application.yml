@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: "DVD Rental"
+  profiles:
+    active: "dev"
+  jooq:
+    sql-dialect: mariadb
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+database:
+  rowsPerPage: 3
+
+---
+spring:
+  config:
+    activate:
+      on-profile: qa

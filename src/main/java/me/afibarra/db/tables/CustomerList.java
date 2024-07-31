@@ -4,20 +4,20 @@
 package me.afibarra.db.tables;
 
 
-import java.util.Collection;
+import java.util.function.Function;
 
 import me.afibarra.db.Sakila;
 import me.afibarra.db.tables.records.CustomerListRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
+import org.jooq.Function9;
 import org.jooq.Name;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
-import org.jooq.SQL;
+import org.jooq.Record;
+import org.jooq.Records;
+import org.jooq.Row9;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -95,11 +95,11 @@ public class CustomerList extends TableImpl<CustomerListRecord> {
     public final TableField<CustomerListRecord, UByte> SID = createField(DSL.name("SID"), SQLDataType.TINYINTUNSIGNED.nullable(false), this, "");
 
     private CustomerList(Name alias, Table<CustomerListRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private CustomerList(Name alias, Table<CustomerListRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment("VIEW"), TableOptions.view("create view `customer_list` as select `cu`.`customer_id` AS `ID`,concat(`cu`.`first_name`,' ',`cu`.`last_name`) AS `name`,`a`.`address` AS `address`,`a`.`postal_code` AS `zip code`,`a`.`phone` AS `phone`,`sakila`.`city`.`city` AS `city`,`sakila`.`country`.`country` AS `country`,if(`cu`.`active`,'active','') AS `notes`,`cu`.`store_id` AS `SID` from (((`sakila`.`customer` `cu` join `sakila`.`address` `a` on(`cu`.`address_id` = `a`.`address_id`)) join `sakila`.`city` on(`a`.`city_id` = `sakila`.`city`.`city_id`)) join `sakila`.`country` on(`sakila`.`city`.`country_id` = `sakila`.`country`.`country_id`))"), where);
+    private CustomerList(Name alias, Table<CustomerListRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment("VIEW"), TableOptions.view("create view `customer_list` as select `cu`.`customer_id` AS `ID`,concat(`cu`.`first_name`,' ',`cu`.`last_name`) AS `name`,`a`.`address` AS `address`,`a`.`postal_code` AS `zip code`,`a`.`phone` AS `phone`,`sakila`.`city`.`city` AS `city`,`sakila`.`country`.`country` AS `country`,if(`cu`.`active`,'active','') AS `notes`,`cu`.`store_id` AS `SID` from (((`sakila`.`customer` `cu` join `sakila`.`address` `a` on(`cu`.`address_id` = `a`.`address_id`)) join `sakila`.`city` on(`a`.`city_id` = `sakila`.`city`.`city_id`)) join `sakila`.`country` on(`sakila`.`city`.`country_id` = `sakila`.`country`.`country_id`))"));
     }
 
     /**
@@ -121,6 +121,10 @@ public class CustomerList extends TableImpl<CustomerListRecord> {
      */
     public CustomerList() {
         this(DSL.name("customer_list"), null);
+    }
+
+    public <O extends Record> CustomerList(Table<O> child, ForeignKey<O, CustomerListRecord> key) {
+        super(child, key, CUSTOMER_LIST);
     }
 
     @Override
@@ -167,87 +171,27 @@ public class CustomerList extends TableImpl<CustomerListRecord> {
         return new CustomerList(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row9 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public CustomerList where(Condition condition) {
-        return new CustomerList(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row9<UShort, String, String, String, String, String, String, String, UByte> fieldsRow() {
+        return (Row9) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public CustomerList where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function9<? super UShort, ? super String, ? super String, ? super String, ? super String, ? super String, ? super String, ? super String, ? super UByte, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public CustomerList where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public CustomerList where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public CustomerList where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public CustomerList where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public CustomerList where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public CustomerList where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public CustomerList whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public CustomerList whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function9<? super UShort, ? super String, ? super String, ? super String, ? super String, ? super String, ? super String, ? super String, ? super UByte, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }

@@ -6,6 +6,9 @@ package me.afibarra.db.tables.records;
 
 import me.afibarra.db.tables.ActorInfo;
 
+import org.jooq.Field;
+import org.jooq.Record4;
+import org.jooq.Row4;
 import org.jooq.impl.TableRecordImpl;
 import org.jooq.types.UShort;
 
@@ -14,7 +17,7 @@ import org.jooq.types.UShort;
  * VIEW
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class ActorInfoRecord extends TableRecordImpl<ActorInfoRecord> {
+public class ActorInfoRecord extends TableRecordImpl<ActorInfoRecord> implements Record4<UShort, String, String, String> {
 
     private static final long serialVersionUID = 1L;
 
@@ -72,6 +75,113 @@ public class ActorInfoRecord extends TableRecordImpl<ActorInfoRecord> {
      */
     public String getFilmInfo() {
         return (String) get(3);
+    }
+
+    // -------------------------------------------------------------------------
+    // Record4 type implementation
+    // -------------------------------------------------------------------------
+
+    @Override
+    public Row4<UShort, String, String, String> fieldsRow() {
+        return (Row4) super.fieldsRow();
+    }
+
+    @Override
+    public Row4<UShort, String, String, String> valuesRow() {
+        return (Row4) super.valuesRow();
+    }
+
+    @Override
+    public Field<UShort> field1() {
+        return ActorInfo.ACTOR_INFO.ACTOR_ID;
+    }
+
+    @Override
+    public Field<String> field2() {
+        return ActorInfo.ACTOR_INFO.FIRST_NAME;
+    }
+
+    @Override
+    public Field<String> field3() {
+        return ActorInfo.ACTOR_INFO.LAST_NAME;
+    }
+
+    @Override
+    public Field<String> field4() {
+        return ActorInfo.ACTOR_INFO.FILM_INFO;
+    }
+
+    @Override
+    public UShort component1() {
+        return getActorId();
+    }
+
+    @Override
+    public String component2() {
+        return getFirstName();
+    }
+
+    @Override
+    public String component3() {
+        return getLastName();
+    }
+
+    @Override
+    public String component4() {
+        return getFilmInfo();
+    }
+
+    @Override
+    public UShort value1() {
+        return getActorId();
+    }
+
+    @Override
+    public String value2() {
+        return getFirstName();
+    }
+
+    @Override
+    public String value3() {
+        return getLastName();
+    }
+
+    @Override
+    public String value4() {
+        return getFilmInfo();
+    }
+
+    @Override
+    public ActorInfoRecord value1(UShort value) {
+        setActorId(value);
+        return this;
+    }
+
+    @Override
+    public ActorInfoRecord value2(String value) {
+        setFirstName(value);
+        return this;
+    }
+
+    @Override
+    public ActorInfoRecord value3(String value) {
+        setLastName(value);
+        return this;
+    }
+
+    @Override
+    public ActorInfoRecord value4(String value) {
+        setFilmInfo(value);
+        return this;
+    }
+
+    @Override
+    public ActorInfoRecord values(UShort value1, String value2, String value3, String value4) {
+        value1(value1);
+        value2(value2);
+        value3(value3);
+        value4(value4);
+        return this;
     }
 
     // -------------------------------------------------------------------------

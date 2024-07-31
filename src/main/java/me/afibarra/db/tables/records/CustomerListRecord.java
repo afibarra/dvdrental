@@ -6,6 +6,9 @@ package me.afibarra.db.tables.records;
 
 import me.afibarra.db.tables.CustomerList;
 
+import org.jooq.Field;
+import org.jooq.Record9;
+import org.jooq.Row9;
 import org.jooq.impl.TableRecordImpl;
 import org.jooq.types.UByte;
 import org.jooq.types.UShort;
@@ -15,7 +18,7 @@ import org.jooq.types.UShort;
  * VIEW
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class CustomerListRecord extends TableRecordImpl<CustomerListRecord> {
+public class CustomerListRecord extends TableRecordImpl<CustomerListRecord> implements Record9<UShort, String, String, String, String, String, String, String, UByte> {
 
     private static final long serialVersionUID = 1L;
 
@@ -143,6 +146,223 @@ public class CustomerListRecord extends TableRecordImpl<CustomerListRecord> {
      */
     public UByte getSid() {
         return (UByte) get(8);
+    }
+
+    // -------------------------------------------------------------------------
+    // Record9 type implementation
+    // -------------------------------------------------------------------------
+
+    @Override
+    public Row9<UShort, String, String, String, String, String, String, String, UByte> fieldsRow() {
+        return (Row9) super.fieldsRow();
+    }
+
+    @Override
+    public Row9<UShort, String, String, String, String, String, String, String, UByte> valuesRow() {
+        return (Row9) super.valuesRow();
+    }
+
+    @Override
+    public Field<UShort> field1() {
+        return CustomerList.CUSTOMER_LIST.ID;
+    }
+
+    @Override
+    public Field<String> field2() {
+        return CustomerList.CUSTOMER_LIST.NAME;
+    }
+
+    @Override
+    public Field<String> field3() {
+        return CustomerList.CUSTOMER_LIST.ADDRESS;
+    }
+
+    @Override
+    public Field<String> field4() {
+        return CustomerList.CUSTOMER_LIST.ZIP_CODE;
+    }
+
+    @Override
+    public Field<String> field5() {
+        return CustomerList.CUSTOMER_LIST.PHONE;
+    }
+
+    @Override
+    public Field<String> field6() {
+        return CustomerList.CUSTOMER_LIST.CITY;
+    }
+
+    @Override
+    public Field<String> field7() {
+        return CustomerList.CUSTOMER_LIST.COUNTRY;
+    }
+
+    @Override
+    public Field<String> field8() {
+        return CustomerList.CUSTOMER_LIST.NOTES;
+    }
+
+    @Override
+    public Field<UByte> field9() {
+        return CustomerList.CUSTOMER_LIST.SID;
+    }
+
+    @Override
+    public UShort component1() {
+        return getId();
+    }
+
+    @Override
+    public String component2() {
+        return getName();
+    }
+
+    @Override
+    public String component3() {
+        return getAddress();
+    }
+
+    @Override
+    public String component4() {
+        return getZipCode();
+    }
+
+    @Override
+    public String component5() {
+        return getPhone();
+    }
+
+    @Override
+    public String component6() {
+        return getCity();
+    }
+
+    @Override
+    public String component7() {
+        return getCountry();
+    }
+
+    @Override
+    public String component8() {
+        return getNotes();
+    }
+
+    @Override
+    public UByte component9() {
+        return getSid();
+    }
+
+    @Override
+    public UShort value1() {
+        return getId();
+    }
+
+    @Override
+    public String value2() {
+        return getName();
+    }
+
+    @Override
+    public String value3() {
+        return getAddress();
+    }
+
+    @Override
+    public String value4() {
+        return getZipCode();
+    }
+
+    @Override
+    public String value5() {
+        return getPhone();
+    }
+
+    @Override
+    public String value6() {
+        return getCity();
+    }
+
+    @Override
+    public String value7() {
+        return getCountry();
+    }
+
+    @Override
+    public String value8() {
+        return getNotes();
+    }
+
+    @Override
+    public UByte value9() {
+        return getSid();
+    }
+
+    @Override
+    public CustomerListRecord value1(UShort value) {
+        setId(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord value2(String value) {
+        setName(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord value3(String value) {
+        setAddress(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord value4(String value) {
+        setZipCode(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord value5(String value) {
+        setPhone(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord value6(String value) {
+        setCity(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord value7(String value) {
+        setCountry(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord value8(String value) {
+        setNotes(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord value9(UByte value) {
+        setSid(value);
+        return this;
+    }
+
+    @Override
+    public CustomerListRecord values(UShort value1, String value2, String value3, String value4, String value5, String value6, String value7, String value8, UByte value9) {
+        value1(value1);
+        value2(value2);
+        value3(value3);
+        value4(value4);
+        value5(value5);
+        value6(value6);
+        value7(value7);
+        value8(value8);
+        value9(value9);
+        return this;
     }
 
     // -------------------------------------------------------------------------

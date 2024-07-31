@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import me.afibarra.db.enums.FilmListRating;
 import me.afibarra.db.tables.FilmList;
 
+import org.jooq.Field;
+import org.jooq.Record8;
+import org.jooq.Row8;
 import org.jooq.impl.TableRecordImpl;
 import org.jooq.types.UShort;
 
@@ -17,7 +20,7 @@ import org.jooq.types.UShort;
  * VIEW
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class FilmListRecord extends TableRecordImpl<FilmListRecord> {
+public class FilmListRecord extends TableRecordImpl<FilmListRecord> implements Record8<UShort, String, String, String, BigDecimal, UShort, FilmListRating, String> {
 
     private static final long serialVersionUID = 1L;
 
@@ -131,6 +134,201 @@ public class FilmListRecord extends TableRecordImpl<FilmListRecord> {
      */
     public String getActors() {
         return (String) get(7);
+    }
+
+    // -------------------------------------------------------------------------
+    // Record8 type implementation
+    // -------------------------------------------------------------------------
+
+    @Override
+    public Row8<UShort, String, String, String, BigDecimal, UShort, FilmListRating, String> fieldsRow() {
+        return (Row8) super.fieldsRow();
+    }
+
+    @Override
+    public Row8<UShort, String, String, String, BigDecimal, UShort, FilmListRating, String> valuesRow() {
+        return (Row8) super.valuesRow();
+    }
+
+    @Override
+    public Field<UShort> field1() {
+        return FilmList.FILM_LIST.FID;
+    }
+
+    @Override
+    public Field<String> field2() {
+        return FilmList.FILM_LIST.TITLE;
+    }
+
+    @Override
+    public Field<String> field3() {
+        return FilmList.FILM_LIST.DESCRIPTION;
+    }
+
+    @Override
+    public Field<String> field4() {
+        return FilmList.FILM_LIST.CATEGORY;
+    }
+
+    @Override
+    public Field<BigDecimal> field5() {
+        return FilmList.FILM_LIST.PRICE;
+    }
+
+    @Override
+    public Field<UShort> field6() {
+        return FilmList.FILM_LIST.LENGTH;
+    }
+
+    @Override
+    public Field<FilmListRating> field7() {
+        return FilmList.FILM_LIST.RATING;
+    }
+
+    @Override
+    public Field<String> field8() {
+        return FilmList.FILM_LIST.ACTORS;
+    }
+
+    @Override
+    public UShort component1() {
+        return getFid();
+    }
+
+    @Override
+    public String component2() {
+        return getTitle();
+    }
+
+    @Override
+    public String component3() {
+        return getDescription();
+    }
+
+    @Override
+    public String component4() {
+        return getCategory();
+    }
+
+    @Override
+    public BigDecimal component5() {
+        return getPrice();
+    }
+
+    @Override
+    public UShort component6() {
+        return getLength();
+    }
+
+    @Override
+    public FilmListRating component7() {
+        return getRating();
+    }
+
+    @Override
+    public String component8() {
+        return getActors();
+    }
+
+    @Override
+    public UShort value1() {
+        return getFid();
+    }
+
+    @Override
+    public String value2() {
+        return getTitle();
+    }
+
+    @Override
+    public String value3() {
+        return getDescription();
+    }
+
+    @Override
+    public String value4() {
+        return getCategory();
+    }
+
+    @Override
+    public BigDecimal value5() {
+        return getPrice();
+    }
+
+    @Override
+    public UShort value6() {
+        return getLength();
+    }
+
+    @Override
+    public FilmListRating value7() {
+        return getRating();
+    }
+
+    @Override
+    public String value8() {
+        return getActors();
+    }
+
+    @Override
+    public FilmListRecord value1(UShort value) {
+        setFid(value);
+        return this;
+    }
+
+    @Override
+    public FilmListRecord value2(String value) {
+        setTitle(value);
+        return this;
+    }
+
+    @Override
+    public FilmListRecord value3(String value) {
+        setDescription(value);
+        return this;
+    }
+
+    @Override
+    public FilmListRecord value4(String value) {
+        setCategory(value);
+        return this;
+    }
+
+    @Override
+    public FilmListRecord value5(BigDecimal value) {
+        setPrice(value);
+        return this;
+    }
+
+    @Override
+    public FilmListRecord value6(UShort value) {
+        setLength(value);
+        return this;
+    }
+
+    @Override
+    public FilmListRecord value7(FilmListRating value) {
+        setRating(value);
+        return this;
+    }
+
+    @Override
+    public FilmListRecord value8(String value) {
+        setActors(value);
+        return this;
+    }
+
+    @Override
+    public FilmListRecord values(UShort value1, String value2, String value3, String value4, BigDecimal value5, UShort value6, FilmListRating value7, String value8) {
+        value1(value1);
+        value2(value2);
+        value3(value3);
+        value4(value4);
+        value5(value5);
+        value6(value6);
+        value7(value7);
+        value8(value8);
+        return this;
     }
 
     // -------------------------------------------------------------------------

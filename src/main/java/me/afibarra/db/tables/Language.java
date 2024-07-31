@@ -5,27 +5,22 @@ package me.afibarra.db.tables;
 
 
 import java.time.LocalDateTime;
-import java.util.Collection;
+import java.util.function.Function;
 
 import me.afibarra.db.Keys;
 import me.afibarra.db.Sakila;
-import me.afibarra.db.tables.Film.FilmPath;
 import me.afibarra.db.tables.records.LanguageRecord;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Function3;
 import org.jooq.Identity;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
-import org.jooq.Path;
-import org.jooq.PlainSQL;
-import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.SQL;
+import org.jooq.Records;
+import org.jooq.Row3;
 import org.jooq.Schema;
-import org.jooq.Select;
-import org.jooq.Stringly;
+import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -73,11 +68,11 @@ public class Language extends TableImpl<LanguageRecord> {
     public final TableField<LanguageRecord, LocalDateTime> LAST_UPDATE = createField(DSL.name("last_update"), SQLDataType.LOCALDATETIME(0).nullable(false).defaultValue(DSL.field(DSL.raw("current_timestamp()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private Language(Name alias, Table<LanguageRecord> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Language(Name alias, Table<LanguageRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Language(Name alias, Table<LanguageRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -101,37 +96,8 @@ public class Language extends TableImpl<LanguageRecord> {
         this(DSL.name("language"), null);
     }
 
-    public <O extends Record> Language(Table<O> path, ForeignKey<O, LanguageRecord> childPath, InverseForeignKey<O, LanguageRecord> parentPath) {
-        super(path, childPath, parentPath, LANGUAGE);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class LanguagePath extends Language implements Path<LanguageRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> LanguagePath(Table<O> path, ForeignKey<O, LanguageRecord> childPath, InverseForeignKey<O, LanguageRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private LanguagePath(Name alias, Table<LanguageRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public LanguagePath as(String alias) {
-            return new LanguagePath(DSL.name(alias), this);
-        }
-
-        @Override
-        public LanguagePath as(Name alias) {
-            return new LanguagePath(alias, this);
-        }
-
-        @Override
-        public LanguagePath as(Table<?> alias) {
-            return new LanguagePath(alias.getQualifiedName(), this);
-        }
+    public <O extends Record> Language(Table<O> child, ForeignKey<O, LanguageRecord> key) {
+        super(child, key, LANGUAGE);
     }
 
     @Override
@@ -147,32 +113,6 @@ public class Language extends TableImpl<LanguageRecord> {
     @Override
     public UniqueKey<LanguageRecord> getPrimaryKey() {
         return Keys.KEY_LANGUAGE_PRIMARY;
-    }
-
-    private transient FilmPath _fkFilmLanguage;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.film</code> table,
-     * via the <code>fk_film_language</code> key
-     */
-    public FilmPath fkFilmLanguage() {
-        if (_fkFilmLanguage == null)
-            _fkFilmLanguage = new FilmPath(this, null, Keys.FK_FILM_LANGUAGE.getInverseKey());
-
-        return _fkFilmLanguage;
-    }
-
-    private transient FilmPath _fkFilmLanguageOriginal;
-
-    /**
-     * Get the implicit to-many join path to the <code>sakila.film</code> table,
-     * via the <code>fk_film_language_original</code> key
-     */
-    public FilmPath fkFilmLanguageOriginal() {
-        if (_fkFilmLanguageOriginal == null)
-            _fkFilmLanguageOriginal = new FilmPath(this, null, Keys.FK_FILM_LANGUAGE_ORIGINAL.getInverseKey());
-
-        return _fkFilmLanguageOriginal;
     }
 
     @Override
@@ -214,87 +154,27 @@ public class Language extends TableImpl<LanguageRecord> {
         return new Language(name.getQualifiedName(), null);
     }
 
-    /**
-     * Create an inline derived table from this table
-     */
+    // -------------------------------------------------------------------------
+    // Row3 type methods
+    // -------------------------------------------------------------------------
+
     @Override
-    public Language where(Condition condition) {
-        return new Language(getQualifiedName(), aliased() ? this : null, null, condition);
+    public Row3<UByte, String, LocalDateTime> fieldsRow() {
+        return (Row3) super.fieldsRow();
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    @Override
-    public Language where(Collection<? extends Condition> conditions) {
-        return where(DSL.and(conditions));
+    public <U> SelectField<U> mapping(Function3<? super UByte, ? super String, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
     }
 
     /**
-     * Create an inline derived table from this table
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
      */
-    @Override
-    public Language where(Condition... conditions) {
-        return where(DSL.and(conditions));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Language where(Field<Boolean> condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Language where(SQL condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Language where(@Stringly.SQL String condition) {
-        return where(DSL.condition(condition));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Language where(@Stringly.SQL String condition, Object... binds) {
-        return where(DSL.condition(condition, binds));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    @PlainSQL
-    public Language where(@Stringly.SQL String condition, QueryPart... parts) {
-        return where(DSL.condition(condition, parts));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Language whereExists(Select<?> select) {
-        return where(DSL.exists(select));
-    }
-
-    /**
-     * Create an inline derived table from this table
-     */
-    @Override
-    public Language whereNotExists(Select<?> select) {
-        return where(DSL.notExists(select));
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super UByte, ? super String, ? super LocalDateTime, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
     }
 }
